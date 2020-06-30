@@ -4,11 +4,7 @@ import asyncio
 import time
 from datetime import datetime
 import random
-import giphy_client
 import aiohttp
-from giphy_client.rest import ApiException
-import youtube_dl
-import json
 from discord.utils import get
 
 def read_token():
