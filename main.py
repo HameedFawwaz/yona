@@ -4,7 +4,11 @@ import asyncio
 import time
 from datetime import datetime
 import random
+import giphy_client
 import aiohttp
+from giphy_client.rest import ApiException
+import youtube_dl
+import json
 from discord.utils import get
 
 def read_token():
@@ -12,21 +16,22 @@ def read_token():
         liens = f.readlines()
         return liens[0].strip()
 
-with open ("reports.json", encoding='utf-8') as f:
-    try:
-        report = json.load(f)
-    except ValueError:
-        report = {}
-        report['users'] = []
-
+'''with open('reports.json', 'r+') as f:
+    #try:
+        #report = json.load(f)
+    #except ValueError:
+    report = {}
+    report['users'] = []
+    json.dumps(report)
+    print(report)'''
 
 bot = commands.Bot(command_prefix = 'y-', case_insensitive=True)
 token = read_token()
 messages = joined = 0
 
 
-now = datetime.now()
-current_time = now.strftime("%H:%M")
+
+
 #-----INDICATOR FOR BOT READY-----
 
 @bot.event
@@ -55,15 +60,14 @@ async def update_stats():
 
 
 #-----BOT WELCOME MESSAGE-----
-
 @bot.event
 async def on_member_join(member):
     global joined
     joined += 1
-    """with open('warns.json', 'r') as f:
-        users = json.load(f)"""
     channel = bot.get_channel(712508604770418692)
     rules_channel = bot.get_channel(712516237028229172)
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     await channel.send(f"what’s good {member.mention}, welcome to :shinto_shrine:**Kenkyona Village** :shinto_shrine:! Make sure to read {rules_channel.mention} have a chill time with us!")
     print(f"{current_time} - {member} has joined the server. ")
 
@@ -78,6 +82,8 @@ async def on_message(message):
         await message.delete()
         await message.channel.send(f"{user} has dropped a hard r")
         await message.author.ban(reason = "User dropped a hard r")
+        now = datetime.now()
+        current_time = now.strftime("%H:%M")
         print(f"{current_time} - {user} has been banned for dropping a hard r. ")
 
     await bot.process_commands(message)
@@ -88,6 +94,8 @@ async def on_message(message):
 async def clear(ctx, amount=2):
     await ctx.channel.purge(limit=int(amount))
     user = ctx.author.name
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {user} deleted {amount} messages. ")
 
 @bot.command()
@@ -95,6 +103,8 @@ async def clear(ctx, amount=2):
 async def purge(ctx, amount=100000000):
     await ctx.channel.purge(limit=int(amount))
     user = ctx.author.name
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {user} has purged a channel")
 
 @bot.command()
@@ -103,6 +113,9 @@ async def ban (ctx, member: discord.Member, *, reason = None):
     await member.ban(reason = reason)
     await ctx.send(f"{member} has been banned")
     banned_user = member
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
+
     print(f"{current_time} - {ctx.author.name} banned {banned_user}. ")
 
 @bot.command()
@@ -118,6 +131,8 @@ async def unban(ctx, userId):
 async def slowmode(ctx, response: int):
     await ctx.channel.edit(slowmode_delay=response)
     await ctx.send(f"Slowing down this channel by {response}s")
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {ctx.author.name} has slowed down {ctx.channel.name} by {response}s")
 
 
@@ -125,16 +140,15 @@ async def slowmode(ctx, response: int):
 async def slowmode_off(ctx, response: str):
     await ctx.channel.edit(slowmode_delay = 0)
     await ctx.send("Turning off slowmode in this channel")
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {ctx.author.name} has turned off slowmode in {ctx.channel.name}")
 
 '''
 
 @bot.command()
 @commands.has_permissions(manage_roles=True, ban_members = True)
-async def warn (ctx, member: discord.member, *reason:str):
-    if not reason:
-        await ctx.send("Please provide a reason")
-        return
+async def warn (ctx, member: discord.Member, *, reason:str):
     reason = ' '.join(reason)
     for current_user in report['users']:
         if current_user['name'] == member.name:
@@ -142,11 +156,16 @@ async def warn (ctx, member: discord.member, *reason:str):
             break
         else:
             report['users'].append({
-                'name':member.name,
+                'name': member.name,
                 'reasons': [reason]
             })
-    with open ('reports.json' ,'wt') as f:
+        await ctx.send(f"Warned {member.mention} for {reason}")
+        print(f"{ctx.author.name} has warned {member.mention} for {reason}")
+    with open ('reports.json' ,'r+') as f:
         json.dump(report, f)
+        data = f.read()
+        json_data = json.loads(data)
+        print(json_data)
 
 @bot.command()
 async def warnings (ctx, member:discord.Member):
@@ -156,8 +175,8 @@ async def warnings (ctx, member:discord.Member):
         else:
             await ctx.send(f"{member.name} has never been reported")
 
-
 '''
+
 
 @bot.command()
 @commands.has_permissions(kick_members = True)
@@ -165,6 +184,8 @@ async def kick(ctx, member: discord.Member, *, reason=None):
     await member.kick(reason=reason)
     await ctx.send(f"{member.mention} has been kicked")
     user = ctx.author.name
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {user} has banned {member}")
 
 @bot.command()
@@ -172,6 +193,8 @@ async def kick(ctx, member: discord.Member, *, reason=None):
 async def mute (ctx, member: discord.Member, time: int, reason = 'None'):
     mute_role = get(member.guild.roles, name = 'Muted')
     await member.add_roles(mute_role, reason = reason)
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {ctx.author} muted {member.mention} for {time} minute(s)")
     await ctx.send(f"Muted {member} for {time} minute(s)")
 
@@ -188,6 +211,8 @@ async def unmute(ctx, member: discord.Member):
     await ctx.send(f"{member.mention} has been unmuted")
     mute_role = get(member.guild.roles, name = 'Muted')
     await member.remove_roles(mute_role)
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {ctx.author.name} unmuted {member}")
 
 @bot.group(name='lockdown')
@@ -200,7 +225,9 @@ async def lockdown(ctx):
 @lockdown.command(name='channel')
 async def lockdownchannel(ctx):
     await ctx.channel.set_permissions(ctx.guild.default_role, send_messages = False)
-    await ctx.send(f"{current_time} - This channel has been locked down")
+    await ctx.send(f"This channel has been locked down")
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - This channel has been locked down")
 
 
@@ -233,7 +260,9 @@ async def lockdownoff(ctx):
 
     print(channelid)
     await ctx.send("Lockdown removed")
-    print(f"{ctx.author.name} has removed the lockdown")
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
+    print(f"{current_time} - {ctx.author.name} has removed the lockdown")
 
 #------MISC COMMANDS-----
 
@@ -241,8 +270,10 @@ async def lockdownoff(ctx):
 async def ping(ctx):
     ping_ = bot.latency
     ping = round(ping_ * 1000)
+    now = datetime.now()
+    gcurrent_time = now.strftime("%H:%M")
     await ctx.send(f"my ping is **{ping} ms**")
-    print(f"{current_time} - my ping is {ping} ms")
+    print(f"{gcurrent_time} - my ping is {ping} ms")
 
 
 bot.remove_command("help")
@@ -331,7 +362,8 @@ async def join(ctx):
 async def leave(ctx):
     channel = ctx.message.author.voice.channel
     voice = get(bot.voice_clients, guild=ctx.guild)
-    
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     
     if voice and voice.is_connected():
         await voice.disconnect()
@@ -365,15 +397,18 @@ async def china(ctx):
 
 @bot.command()
 async def marry(ctx, member):
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     for x in range(1):
         x = random.randint(1, 101)
         await ctx.send(f"{ctx.author.mention} has a {x}% chance of getting with {member}")
+
         print(f"{current_time} - {ctx.author.name} asked out {member}")
 
 
         if x > 50:
             print(f"{current_time} - {ctx.author.name} has a decent chance at winning over {member}")
-            await ctx.send(f"{current_time} - {ctx.author.name} has a decent chance at winning over {member}")
+            await ctx.send(f"{ctx.author.name} has a decent chance at winning over {member}")
         else:
             print(f"{ctx.author.name} is bouta get rejected lmfao")
             await ctx.send(f"{current_time} - {ctx.author.name} is bouta get rejected lmfao")
@@ -383,6 +418,8 @@ async def marry(ctx, member):
 @bot.command()
 async def membercount(ctx):
     await ctx.send(f":shinto_shrine:**Kenkyona Village** :shinto_shrine: has **{ctx.guild.member_count} members**")
+    now = datetime.now()
+    current_time = now.strftime("%H:%M")
     print(f"{current_time} - {ctx.author.name} used membercount")
 
 #------USER SPECIFIC COMMANDS-----
@@ -443,3 +480,12 @@ async def giphy(ctx, *, search):
     await session.close()
 
     await ctx.send(embed=embed)'''
+'''
+with open ("reports.json", encoding='utf-8') as f:
+    try:
+        report = json.load(f)
+    except ValueError:
+        report = {}
+        report['users'] = []
+'''
+
