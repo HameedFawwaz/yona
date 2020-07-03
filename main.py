@@ -304,7 +304,8 @@ async def command(ctx):
 @help.command(name = 'misc')
 async def misc_subcommand(ctx):
     await ctx.send("""Misc Commands:
-    afk (time) (status): Sets your AFK status""")
+    afk (time) (status): Sets your AFK status
+    marry (user): You are tested to see if you are compatible with the other user""")
 
 @bot.command()
 async def afk(ctx, mins, *,  act : str,):
